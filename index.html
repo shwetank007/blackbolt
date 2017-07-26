@@ -39,17 +39,66 @@
         };
 
         map = new google.maps.Map(document.getElementById('map'), mapOptions);
-        getCornerCoordinates(map);
+        highlightRegion(map);
     }
 
-    function getCornerCoordinates(map) {
-        google.maps.event.addListener(map, 'idle', function() {
-            var bounds = map.getBounds();
-            var northEast = bounds.getNorthEast();
-            var southWest = bounds.getSouthWest();
-            console.log('Latitude -> ' + northEast.lat()+ ' Longitude -> '+ northEast.lng());
-            console.log('Latitude -> ' + southWest.lat()+ ' Longitude -> '+ southWest.lng());
+    function highlightRegion(map) {
+
+        var center, area, areaOptions;
+
+        areaOptions = {
+            strokeColor: '#FF0000',
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: '#FF0000',
+            fillOpacity: 0.35,
+            map: map,
+            center: center,
+            radius: 99999
+        };
+
+        area = new google.maps.Circle(areaOptions);
+
+        // When dragged circle wouldn't be visible
+        google.maps.event.addListener(map, 'drag', function () {
+            area.setMap(null);
         });
+
+        //When map is idle it would take the center
+        google.maps.event.addListener(map, 'idle', function() {
+            area.setCenter(map.getCenter());
+            area.setMap(map);
+            var geocoder = new google.maps.Geocoder();
+//            var bounds = new google.maps.LatLngBounds();
+//            console.log(bounds);
+            var geocodeOptions = {
+                location: map.getCenter()
+//                bounds:
+            };
+            geocoder.geocode(geocodeOptions, function(results, response) {
+                console.log(results);
+//                console.log(response);
+                if (results[1]) {
+                    //formatted address
+                    console.log(results[0].formatted_address);
+                    //find country name
+                    for (var i = 0; i < results[0].address_components.length; i++) {
+                        for (var b = 0; b < results[0].address_components[i].types.length; b++) {
+
+                            //there are different types that might hold a city admin_area_lvl_1 usually does in come cases looking for sublocality type will be more appropriate
+                            if (results[0].address_components[i].types[b] == "administrative_area_level_2") {
+                                //this is the object you are looking for
+                                var city = results[0].address_components[i];
+                                console.log(city);
+                                break;
+                            }
+                        }
+                    }
+                }
+            });
+
+        });
+
     }
 </script>
 </html>
